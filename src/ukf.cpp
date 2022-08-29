@@ -33,7 +33,7 @@ UKF::UKF()
   P_ = MatrixXd(5, 5);
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 1;
+  std_a_ = 3.0;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
   std_yawdd_ = 0.6;
@@ -180,6 +180,8 @@ void UKF::Prediction(double delta_t)
   Xsig_pred_ = MatrixXd(n_x_, 2 * n_aug_ + 1);
   Xsig_pred_.fill(0.0);
 
+  std::cout << "Prediction" <<std::endl;
+  std::cout << "P :" << P_ << std::endl;
   GenerateSigmaPoints(P_, Xsig);
   AugmentedSigmaPoints(P_, P_aug, Xsig_aug);
   SigmaPointPrediction(Xsig_aug, Xsig_pred_, delta_t);
@@ -218,8 +220,11 @@ void UKF::UpdateRadar(MeasurementPackage meas_package)
   MatrixXd Zsig = MatrixXd(n_z_radar_, 2 * n_aug_ + 1); // matrix for sigma points in measurement space
   MatrixXd S = MatrixXd(n_z_radar_, n_z_radar_);
 
+  std::cout << "UpdateRadar" << std::endl;
+  std::cout << "z :" << z << std::endl;
   PredictRadarMeasurement(Xsig_pred_, Zsig, z_pred, S);
   UpdateState(Xsig_pred_, z, z_pred, Zsig, S, x_, P_);
+  
 }
 
 void UKF::GenerateSigmaPoints(MatrixXd &P_in, MatrixXd &Xsig_out)

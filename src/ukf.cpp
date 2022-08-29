@@ -24,7 +24,7 @@ UKF::UKF()
   use_laser_ = true;
 
   // if this is false, radar measurements will be ignored (except during init)
-  use_radar_ = false;
+  use_radar_ = true;
 
   // initial state vector
   x_ = VectorXd(5);
@@ -385,7 +385,7 @@ void UKF::PredictRadarMeasurement(MatrixXd &Xsig_pred_in,
     double yaw_acc = Xsig_pred_in(4, i);
 
     double rho = sqrt(pow(p_x, 2) + pow(p_y, 2));
-    double phi = atan(p_y / p_x);
+    double phi = atan2(p_y, p_x);
     double rho_acc = (p_x * cos(yaw) * v + p_y * sin(yaw) * v) / rho;
 
     // calculate mean predicted measurement
@@ -410,6 +410,7 @@ void UKF::PredictRadarMeasurement(MatrixXd &Xsig_pred_in,
   {
     // calculate innovation covariance matrix S
     MatrixXd A = (Zsig_in.col(i) - z_pred);
+    A(1) = normalize_angle(A(1));
     A = A * A.transpose();
     S += weights_(i) * A;
   }

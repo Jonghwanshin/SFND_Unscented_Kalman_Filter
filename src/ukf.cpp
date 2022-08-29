@@ -24,7 +24,7 @@ UKF::UKF()
   use_laser_ = true;
 
   // if this is false, radar measurements will be ignored (except during init)
-  use_radar_ = true;
+  use_radar_ = false;
 
   // initial state vector
   x_ = VectorXd(5);
@@ -97,46 +97,66 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package)
   {
     if (meas_package.sensor_type_ == MeasurementPackage::SensorType::LASER)
     {
-      x_.head(2) << meas_package.raw_measurements_;
-      x_[2] = 0.2;
-      x_[3] = 0;
-      x_[4] = 0;
-      P_ = MatrixXd::Identity(n_x_, n_x_);
-      P_(0, 0) = pow(std_laspx_, 2);
-      P_(1, 1) = pow(std_laspy_, 2);
+      if(use_laser_)
+      {
+        x_.head(2) << meas_package.raw_measurements_;
+        x_[2] = 0.2;
+        x_[3] = 0;
+        x_[4] = 0;
+        P_ = MatrixXd::Identity(n_x_, n_x_);
+        P_(0, 0) = pow(std_laspx_, 2);
+        P_(1, 1) = pow(std_laspy_, 2);
+        is_initialized_ = true;
+        time_us_ = meas_package.timestamp_;
+      }
+      
     }
     else
     {
-      double rho = meas_package.raw_measurements_[0];
-      double phi = meas_package.raw_measurements_[1];
-      double rhod = meas_package.raw_measurements_[2];
-      x_[0] = rho * cos(phi);
-      x_[1] = rho * cos(phi);
-      x_[2] = rhod;
-      x_[3] = phi;
-      x_[4] = 0;
-      P_ = MatrixXd::Identity(n_x_, n_x_);
-      P_(0, 0) = pow(std_radr_, 2);
-      P_(1, 1) = pow(std_radphi_, 2);
-      P_(2, 2) = pow(std_radrd_, 2);
-      P_(3, 3) = 0.09;
-      P_(4, 4) = 0.09;
+      if(use_radar_)
+      {
+        double rho = meas_package.raw_measurements_[0];
+        double phi = meas_package.raw_measurements_[1];
+        double rhod = meas_package.raw_measurements_[2];
+        x_[0] = rho * cos(phi);
+        x_[1] = rho * sin(phi);
+        x_[2] = rhod;
+        x_[3] = phi;
+        x_[4] = 0;
+        P_ = MatrixXd::Identity(n_x_, n_x_);
+        P_(0, 0) = pow(std_radr_, 2);
+        P_(1, 1) = pow(std_radphi_, 2);
+        P_(2, 2) = pow(std_radrd_, 2);
+        P_(3, 3) = 0.09;
+        P_(4, 4) = 0.09;
+        is_initialized_ = true;
+        time_us_ = meas_package.timestamp_;
+      }
     }
-    time_us_ = meas_package.timestamp_;
-    is_initialized_ = true;
+    
+    
   }
   else
   {
-    double delta_t = (meas_package.timestamp_ - time_us_) / 1e6;
-    time_us_ = meas_package.timestamp_;
-    Prediction(delta_t);
     if (meas_package.sensor_type_ == MeasurementPackage::SensorType::LASER)
     {
-      UpdateLidar(meas_package);
+      if(use_laser_){
+        double delta_t = (meas_package.timestamp_ - time_us_) / 1e6;
+        time_us_ = meas_package.timestamp_;
+        Prediction(delta_t);
+        UpdateLidar(meas_package);
+      }
+        
     }
     else
     {
-      UpdateRadar(meas_package);
+      if(use_radar_){
+        double delta_t = (meas_package.timestamp_ - time_us_) / 1e6;
+        time_us_ = meas_package.timestamp_;
+        Prediction(delta_t);
+        UpdateRadar(meas_package);
+      }
+        
     }
   }
 }
@@ -251,12 +271,12 @@ void UKF::AugmentedSigmaPoints(MatrixXd &P_in, MatrixXd &P_aug, MatrixXd &Xsig_a
   MatrixXd A = P_aug.llt().matrixL();
   
   // create augmented sigma points
-  Xsig_aug.col(0) = x_aug;
-  for (int i = 0; i < n_aug_; ++i)
+  for (int i=0; i<2*n_aug_+1; ++i)
   {
-    Xsig_aug.col(i + 1) = x_aug + sqrt(lambda_ + n_aug_) * A.col(i);
-    Xsig_aug.col(i + 1 + n_aug_) = x_aug - sqrt(lambda_ + n_aug_) * A.col(i);
+    Xsig_aug.col(i) = x_aug;
   }
+  Xsig_aug.block<7, 7>(0, 1) += sqrt(lambda_ + n_aug_) * A;
+  Xsig_aug.block<7, 7>(0, n_aug_ + 1) -= sqrt(lambda_ + n_aug_) * A;
 
   std::cout << "Xsig_aug : \n"
             << Xsig_aug << std::endl;
@@ -331,6 +351,7 @@ void UKF::PredictMeanAndCovariance(MatrixXd &Xsig_pred_in, VectorXd &x_out, Matr
   for (int i = 0; i < 2 * n_aug_ + 1; ++i)
   {
     MatrixXd A = Xsig_pred_in.col(i) - x_;
+    A(3) = normalize_angle(A(3));
     A = A * A.transpose();
     P += weights_(i) * A;
   }

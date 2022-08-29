@@ -4,8 +4,9 @@
 #include "Eigen/Dense"
 #include "measurement_package.h"
 
-class UKF {
- public:
+class UKF
+{
+public:
   /**
    * Constructor
    */
@@ -40,7 +41,6 @@ class UKF {
    * @param meas_package The measurement at k+1
    */
   void UpdateRadar(MeasurementPackage meas_package);
-
 
   // initially set to false, set to true in first call of ProcessMeasurement
   bool is_initialized_;
@@ -82,29 +82,58 @@ class UKF {
   double std_radphi_;
 
   // Radar measurement noise standard deviation radius change in m/s
-  double std_radrd_ ;
+  double std_radrd_;
 
   // Weights of sigma points
   Eigen::VectorXd weights_;
 
   // State dimension
-  int n_x_;
+  int n_x_ = 5;
 
   // Augmented state dimension
-  int n_aug_;
+  int n_aug_ = 7;
 
   // Sigma point spreading parameter
-  double lambda_;
+  double lambda_ = 3 - n_aug_;
+
+  // set measurement dimension, radar can measure r, phi, and r_dot
+  int n_z_radar_ = 3;
+
+  // set measurement dimension, lidar can measure p_x and p_y;
+  int n_z_lidar_ = 2;
+
+  Eigen::VectorXd weights_radar_;
+
 private:
-  void GenerateSigmaPoints(Eigen::MatrixXd* Xsig_out);
-  void AugmentedSigmaPoints(Eigen::MatrixXd* Xsig_out);
-  void SigmaPointPrediction(Eigen::MatrixXd* Xsig_out);
-  void PredictMeanAndCovariance(Eigen::VectorXd* x_pred, 
-                                Eigen::MatrixXd* P_pred);
-  void PredictRadarMeasurement(Eigen::VectorXd* z_out, 
-                               Eigen::MatrixXd* S_out);
-  void UpdateState(Eigen::VectorXd* x_out, 
-                   Eigen::MatrixXd* P_out);
+  // UKF process for Radar Measurements
+  void GenerateSigmaPoints(Eigen::MatrixXd &P_in, Eigen::MatrixXd &Xsig_out);
+  void AugmentedSigmaPoints(Eigen::MatrixXd &P_in, Eigen::MatrixXd &P_aug, Eigen::MatrixXd &Xsig_aug_out);
+  void SigmaPointPrediction(Eigen::MatrixXd &Xsig_aug, Eigen::MatrixXd &Xsig_out, double delta_t);
+  void PredictMeanAndCovariance(Eigen::MatrixXd &Xsig_pred_in,
+                                Eigen::VectorXd &x_out,
+                                Eigen::MatrixXd &P_out);
+  void PredictRadarMeasurement(Eigen::MatrixXd &Xsig_pred_in,
+                               Eigen::MatrixXd &Zsig_in,
+                               Eigen::VectorXd &z_out,
+                               Eigen::MatrixXd &S_out);
+  void PredictLidarMeasurement(Eigen::MatrixXd &Xsig_pred_in,
+                               Eigen::MatrixXd &Zsig_in,
+                               Eigen::VectorXd &z_out,
+                               Eigen::MatrixXd &S_out);
+  void UpdateState(Eigen::MatrixXd &Xsig_pred_in,
+                   Eigen::VectorXd &z,
+                   Eigen::VectorXd &z_pred_in,
+                   Eigen::MatrixXd &Zsig_in,
+                   Eigen::MatrixXd &S_in,
+                   Eigen::VectorXd &x_out,
+                   Eigen::MatrixXd &P_out);
+  void UpdateStateByLidar(Eigen::MatrixXd &Xsig_pred_in,
+                          Eigen::VectorXd &z,
+                          Eigen::VectorXd &z_pred_in,
+                          Eigen::MatrixXd &Zsig_in,
+                          Eigen::MatrixXd &S_in,
+                          Eigen::VectorXd &x_out,
+                          Eigen::MatrixXd &P_out);
 };
 
-#endif  // UKF_H
+#endif // UKF_H

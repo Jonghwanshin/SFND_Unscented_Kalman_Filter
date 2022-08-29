@@ -102,8 +102,6 @@ public:
   // set measurement dimension, lidar can measure p_x and p_y;
   int n_z_lidar_ = 2;
 
-  Eigen::VectorXd weights_radar_;
-
 private:
   // UKF process for Radar Measurements
   void GenerateSigmaPoints(Eigen::MatrixXd &P_in, Eigen::MatrixXd &Xsig_out);

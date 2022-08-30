@@ -191,7 +191,7 @@ void UKF::Prediction(double delta_t)
   std::cout<< "GenerateSigmaPoints" << std::endl;
   std::cout << "P :" << P_ << std::endl;
   std::cout << "A :" << A << std::endl;
-  std::cout << "A :" << x_ << std::endl;
+  std::cout << "x_ :" << x_ << std::endl;
 
   // calculate sigma points ...
   Xsig.col(0) = x_;
@@ -287,8 +287,6 @@ void UKF::Prediction(double delta_t)
     A = A * A.transpose();
     P_ += weights_(i) * A;
   }
-  // x_ = x;
-  // P_ = P;
   std::cout<< "PredictMeanAndCovariance" << std::endl;
   std::cout << "x_pred: \n"
             << x_ << std::endl;
@@ -303,78 +301,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package)
    * Use lidar data to update the belief about the object's position.
    * Modify the state vector, x_, and covariance, P_.
    * You can also calculate the lidar NIS, if desired.
-   */
-  // VectorXd z = meas_package.raw_measurements_;
-  // VectorXd z_pred = VectorXd(n_z_lidar_);
-  // z_pred.fill(0.0);
-  // MatrixXd Zsig = MatrixXd(n_z_lidar_, 2 * n_aug_ + 1); // matrix for sigma points in measurement space
-  // Zsig.fill(0.0);
-  // MatrixXd S = MatrixXd(n_z_lidar_, n_z_lidar_); // measurement covariance matrix S
-  // S.fill(0.0);
-
-  // // PredictLidarMeasurement(Xsig_pred_, Zsig, z_pred, S);
-  // // mean predicted measurement
-
-  // for (int i = 0; i < 2 * n_aug_ + 1; ++i)
-  // {
-  //   // transform sigma points into measurement space
-  //   Zsig(0, i) = Xsig_pred_(0, i);
-  //   Zsig(1, i) = Xsig_pred_(1, i);
-  // }
-
-  // for (int i=0; i < 2*n_aug_+1; ++i) {
-  //   z_pred = z_pred + weights_(i) * Zsig.col(i);
-  // }
-
-  // MatrixXd R(n_z_lidar_, n_z_lidar_);
-  // R(0, 0) = pow(std_laspx_, 2);
-  // R(1, 1) = pow(std_laspy_, 2);
-
-  // for (int i = 0; i < 2 * n_aug_ + 1; ++i)
-  // {
-  //   // calculate innovation covariance matrix S
-  //   MatrixXd z_diff = (Zsig.col(i) - z_pred);
-  //   S += weights_(i) * z_diff * z_diff.transpose();
-  // }
-  // S += R;
-
-  // std::cout << "PredictLidarMeasurement" << std::endl;
-  // std::cout << "Xsig_pred: \n" << Xsig_pred_ << std::endl;
-  // std::cout << "Zsig : \n" << Zsig << std::endl;
-  // std::cout << "Z_pred : \n" << z_pred << std::endl;
-  // std::cout << "S : \n" << S << std::endl;
-  
-  // // write result
-  
-  // /** UpdateStateByLidar **/  
-  // MatrixXd Tc = MatrixXd(n_x_, n_z_lidar_); // create matrix for cross correlation Tc
-  // Tc.fill(0.0);
-
-  // // calculate cross correlation matrix
-  // for (int i = 0; i < 2 * n_aug_ + 1; ++i)
-  // {
-  //   VectorXd x_diff = Xsig_pred_.col(i) - x_;
-  //   VectorXd z_diff = Zsig.col(i) - z_pred;
-  //   x_diff(3) = normalize_angle(x_diff(3));
-  //   Tc += weights_(i) * (x_diff * z_diff.transpose());
-  // }
-
-  // // calculate Kalman gain K;
-  // MatrixXd K = Tc * S.inverse();
-
-  // // update state mean and covariance matrix
-  // VectorXd z_diff = z - z_pred;
-  // z_diff(1) = normalize_angle(z_diff(1));
-  // x_ += K * z_diff;
-  // P_ -= K * S * K.transpose();
-
-  // std::cout << "UpdateStateByLidar" << std::endl;
-  // std::cout << "X : \n" << x_ << std::endl;
-  // std::cout << "P : \n" << P_ << std::endl;
-  
-  // STEP 4) Predict the measurement mean and covariance; calculate Kalman gain
-  // cout << "Predicting the measurement mean and covariance; calculating Kalman gain" << endl; 
-  
+   */  
   VectorXd z = meas_package.raw_measurements_;
   int n_z = z.size(); // Measurement z is a 2x1 vector for lidar
   
@@ -384,9 +311,9 @@ void UKF::UpdateLidar(MeasurementPackage meas_package)
        0, 1, 0, 0, 0;
 
   // Measurement covariance matrix
-  MatrixXd R = MatrixXd(n_z, n_z);
-  R << pow(std_laspx_, 2), 0,
-       0, pow(std_laspy_, 2);
+  MatrixXd R = MatrixXd::Identity(n_z, n_z);
+  R(0, 0) = pow(std_laspx_, 2);
+  R(1, 1) = pow(std_laspy_, 2);
 
   VectorXd z_pred = VectorXd(n_z);
   z_pred = x_.head(n_z); // Extract the px, py values from the state
@@ -398,13 +325,9 @@ void UKF::UpdateLidar(MeasurementPackage meas_package)
   MatrixXd PHt = P_ * Ht;
   MatrixXd K = PHt * Sinv;
 
-  // STEP 5) Update the state, by applying the Kalman gain to the residual
-  // cout << "Updating the state by applying the Kalman gain to the residual" << endl; 
-
-  MatrixXd I = MatrixXd::Identity(n_x_, n_x_);
-
-  // Update the mean and covariance matrix
+  //new estimate
   x_ = x_ + (K * y);
+  MatrixXd I = MatrixXd::Identity(n_x_, n_x_);
   P_ = (I - K * H) * P_;
 }
 

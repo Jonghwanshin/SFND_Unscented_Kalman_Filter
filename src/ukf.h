@@ -102,36 +102,6 @@ public:
   // set measurement dimension, lidar can measure p_x and p_y;
   int n_z_lidar_ = 2;
 
-private:
-  // UKF process for Radar Measurements
-  void GenerateSigmaPoints(Eigen::MatrixXd &P_in, Eigen::MatrixXd &Xsig_out);
-  void AugmentedSigmaPoints(Eigen::MatrixXd &P_in, Eigen::MatrixXd &P_aug, Eigen::MatrixXd &Xsig_aug_out);
-  void SigmaPointPrediction(Eigen::MatrixXd &Xsig_aug, Eigen::MatrixXd &Xsig_out, double delta_t);
-  void PredictMeanAndCovariance(Eigen::MatrixXd &Xsig_pred_in,
-                                Eigen::VectorXd &x_out,
-                                Eigen::MatrixXd &P_out);
-  void PredictRadarMeasurement(Eigen::MatrixXd &Xsig_pred_in,
-                               Eigen::MatrixXd &Zsig_in,
-                               Eigen::VectorXd &z_out,
-                               Eigen::MatrixXd &S_out);
-  void PredictLidarMeasurement(Eigen::MatrixXd &Xsig_pred_in,
-                               Eigen::MatrixXd &Zsig_in,
-                               Eigen::VectorXd &z_out,
-                               Eigen::MatrixXd &S_out);
-  void UpdateState(Eigen::MatrixXd &Xsig_pred_in,
-                   Eigen::VectorXd &z,
-                   Eigen::VectorXd &z_pred_in,
-                   Eigen::MatrixXd &Zsig_in,
-                   Eigen::MatrixXd &S_in,
-                   Eigen::VectorXd &x_out,
-                   Eigen::MatrixXd &P_out);
-  void UpdateStateByLidar(Eigen::MatrixXd &Xsig_pred_in,
-                          Eigen::VectorXd &z,
-                          Eigen::VectorXd &z_pred_in,
-                          Eigen::MatrixXd &Zsig_in,
-                          Eigen::MatrixXd &S_in,
-                          Eigen::VectorXd &x_out,
-                          Eigen::MatrixXd &P_out);
 };
 
 #endif // UKF_H

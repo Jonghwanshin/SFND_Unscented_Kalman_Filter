@@ -69,8 +69,28 @@ If you'd like to generate your own radar and lidar modify the code in `highway.h
 change how measurements are taken, for instance lidar markers could be the (x,y) center of bounding boxes by scanning the PCD environment
 and performing clustering. This is similar to what was done in Sensor Fusion Lidar Obstacle Detection.
 
-## Project Instructions and Rubric
+## Project Rubric
 
-This information is only accessible by people who are already enrolled in Sensor Fusion. 
-If you are enrolled, see the project page in the classroom
-for instructions and the project rubric.
+Compiling and Testing
+
+| CRITERIA                     | MEETS SPECIFICATIONS                                         |
+| :--------------------------- | :----------------------------------------------------------- |
+| The submission must compile. | The project code must compile without errors using `cmake` and `make`. |
+
+Code Efficiency
+
+| CRITERIA                                                     | MEETS SPECIFICATIONS                                         |
+| :----------------------------------------------------------- | :----------------------------------------------------------- |
+| The methods in the code should avoid unnecessary calculations. | Your code does not need to sacrifice comprehension, stability, or robustness for speed. However, you should maintain good and efficient coding practices when writing your functions.Here are some things to avoid. This is not a complete list, but there are a few examples of inefficiencies.Running the exact same calculation repeatedly when you can run it once, store the value and then reuse the value later.Loops that run too many times.Creating unnecessarily complex data structures when simpler structures work equivalently.Unnecessary control flow checks. |
+
+Accuracy
+
+| CRITERIA                                                     | MEETS SPECIFICATIONS                                         |
+| :----------------------------------------------------------- | :----------------------------------------------------------- |
+| px, py, vx, vy output coordinates must have an RMSE <= [0.30, 0.16, 0.95, 0.70] after running for longer than 1 second. | The simulation collects the position and velocity values that your algorithm outputs and they are compare to the ground truth data. Your px, py, vx, and vy RMSE should be less than or equal to the values [0.30, 0.16, 0.95, 0.70] after the simulator has ran for longer than 1 second. The simulator will also display if RMSE values surpass the threshold. |
+
+Follows the Correct Algorithm
+
+| CRITERIA                                                     | MEETS SPECIFICATIONS                                         |
+| :----------------------------------------------------------- | :----------------------------------------------------------- |
+| Your Sensor Fusion algorithm follows the general processing flow as taught in the preceding lessons. | While you may be creative with your implementation, there is a well-defined set of steps that must take place in order to successfully build a Kalman Filter. As such, your project should follow the algorithm as described in the preceding lesson. |

@@ -88,19 +88,26 @@ public:
   Eigen::VectorXd weights_;
 
   // State dimension
-  int n_x_ = 5;
+  int n_x_;
 
   // Augmented state dimension
-  int n_aug_ = 7;
+  int n_aug_;
 
   // Sigma point spreading parameter
-  double lambda_ = 3 - n_aug_;
+  double lambda_;
 
   // set measurement dimension, radar can measure r, phi, and r_dot
-  int n_z_radar_ = 3;
+  int n_z_radar_;
 
   // set measurement dimension, lidar can measure p_x and p_y;
-  int n_z_lidar_ = 2;
+  int n_z_lidar_;
+
+  // matrices for lidar
+  Eigen::MatrixXd H_;
+  Eigen::MatrixXd R_lidar_;
+  Eigen::MatrixXd P_aug_;
+  
+  Eigen::MatrixXd R_radar_;
 
 };
 

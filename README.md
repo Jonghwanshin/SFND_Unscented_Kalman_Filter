@@ -3,28 +3,16 @@ Sensor Fusion UKF Highway Project Starter Code
 
 <img src="media/ukf_highway_tracked.gif" width="700" height="400" />
 
-In this project you will implement an Unscented Kalman Filter to estimate the state of multiple cars on a highway using noisy lidar and radar measurements. Passing the project requires obtaining RMSE values that are lower that the tolerance outlined in the project rubric. 
-
-The main program can be built and ran by doing the following from the project top directory.
-
-1. mkdir build
-2. cd build
-3. cmake ..
-4. make
-5. ./ukf_highway
-
-Note that the programs that need to be written to accomplish the project are src/ukf.cpp, and src/ukf.h
-
-The program main.cpp has already been filled out, but feel free to modify it.
-
-<img src="media/ukf_highway.png" width="700" height="400" />
+In this project I implemented an Unscented Kalman Filter to estimate the state of multiple cars on a highway using noisy lidar and radar measurements. Passing the project requires obtaining RMSE values that are lower that the tolerance outlined in the project rubric. 
 
 `main.cpp` is using `highway.h` to create a straight 3 lane highway environment with 3 traffic cars and the main ego car at the center. 
-The viewer scene is centered around the ego car and the coordinate system is relative to the ego car as well. The ego car is green while the 
-other traffic cars are blue. The traffic cars will be accelerating and altering their steering to change lanes. Each of the traffic car's has
+The viewer scene is centered around the ego car and the coordinate system is relative to the ego car as well. 
+The ego car is green while the other traffic cars are blue. The traffic cars will be accelerating and altering their steering to change lanes. Each of the traffic car's has
 it's own UKF object generated for it, and will update each indidual one during every time step. 
 
-The red spheres above cars represent the (x,y) lidar detection and the purple lines show the radar measurements with the velocity magnitude along the detected angle. The Z axis is not taken into account for tracking, so you are only tracking along the X/Y axis.
+* The red spheres above cars represent the (x,y) lidar detection 
+* The purple lines show the radar measurements with the velocity magnitude along the detected angle.
+* The green spheres show the UKF estimation of the vehicle position
 
 ---
 
@@ -48,49 +36,40 @@ The red spheres above cars represent the (x,y) lidar detection and the purple li
 3. Compile: `cmake .. && make`
 4. Run it: `./ukf_highway`
 
-## Editor Settings
-
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
-
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
-
-## Code Style
-
-Please stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html) as much as possible.
-
-## Generating Additional Data
-
-This is optional!
-
-If you'd like to generate your own radar and lidar modify the code in `highway.h` to alter the cars. Also check out `tools.cpp` to
-change how measurements are taken, for instance lidar markers could be the (x,y) center of bounding boxes by scanning the PCD environment
-and performing clustering. This is similar to what was done in Sensor Fusion Lidar Obstacle Detection.
-
 ## Project Rubric
 
-Compiling and Testing
+## Rubric 01 - Compiling and Testing
+the project code must compile without any errors
 
-| CRITERIA                     | MEETS SPECIFICATIONS                                         |
-| :--------------------------- | :----------------------------------------------------------- |
-| The submission must compile. | The project code must compile without errors using `cmake` and `make`. |
+## Rubric 02 - Code Efficiency
+I wrote code to minimize redundant calculation and loops for code efficiencies.
 
-Code Efficiency
+## Rubic 03 - Accuracy
+Requirements: px, py, vx, vy output coordinates must have an RMSE <= [0.30, 0.16, 0.95, 0.70] after running for longer than 1 second.
+The code meets the above requirements and it doesn't output any threshold failure warning during run time.
 
-| CRITERIA                                                     | MEETS SPECIFICATIONS                                         |
-| :----------------------------------------------------------- | :----------------------------------------------------------- |
-| The methods in the code should avoid unnecessary calculations. | Your code does not need to sacrifice comprehension, stability, or robustness for speed. However, you should maintain good and efficient coding practices when writing your functions.Here are some things to avoid. This is not a complete list, but there are a few examples of inefficiencies.Running the exact same calculation repeatedly when you can run it once, store the value and then reuse the value later.Loops that run too many times.Creating unnecessarily complex data structures when simpler structures work equivalently.Unnecessary control flow checks. |
+## Rubic 04 - Follows the Correct Algorithm
+I followed the below sensor fusion pipeline to compute the position and velocity of the target vehicles.
+I implemented UKF to track objects even though it shows an example of EKF.
 
-Accuracy
+![](media/sensor-fusion-general-flow.png)
 
-| CRITERIA                                                     | MEETS SPECIFICATIONS                                         |
-| :----------------------------------------------------------- | :----------------------------------------------------------- |
-| px, py, vx, vy output coordinates must have an RMSE <= [0.30, 0.16, 0.95, 0.70] after running for longer than 1 second. | The simulation collects the position and velocity values that your algorithm outputs and they are compare to the ground truth data. Your px, py, vx, and vy RMSE should be less than or equal to the values [0.30, 0.16, 0.95, 0.70] after the simulator has ran for longer than 1 second. The simulator will also display if RMSE values surpass the threshold. |
-
-Follows the Correct Algorithm
-
-| CRITERIA                                                     | MEETS SPECIFICATIONS                                         |
-| :----------------------------------------------------------- | :----------------------------------------------------------- |
-| Your Sensor Fusion algorithm follows the general processing flow as taught in the preceding lessons. | While you may be creative with your implementation, there is a well-defined set of steps that must take place in order to successfully build a Kalman Filter. As such, your project should follow the algorithm as described in the preceding lesson. |
+1. First, we initialize UKF matrices to compute
+2. When the first measurement arrives, we initialize state X and covariance matrix P
+3. Then iterate the below procedures when new measurement arrives:
+   1. Predict Stage
+      1. Generate Sigma Points Xsig
+      2. Generate Augmented Points Xaug
+      3. From augmented points Xaug, predict sigma points Xsig_pred
+      4. Predict state X and covariance matrix P
+   2. Update Stage
+      1. Lidar Measurements
+         1. Calculate Kalman gain
+         2. Update State mean and covariance matrix
+      2. Radar Measurements
+         1. Transform sigma points into measurement space Zsig
+         2. Calculate innovation covariance matrix S
+         3. Calculate cross correlation Tc
+         4. Calculate Kalman gain
+         5. Update State mean and covariance matrix
+  
